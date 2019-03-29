@@ -80,6 +80,7 @@ public class TestHttpLoadServer {
         DebugUtil.info("pool: {}", pool);
         DebugUtil.info("core: {}", core);
         DebugUtil.info("frame: {}", frame);
+        DebugUtil.info("epoll: {}", epoll);
         DebugUtil.info("level: {}", level);
         DebugUtil.info("direct: {}", direct);
         DebugUtil.info("inline: {}", inline);
