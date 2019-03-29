@@ -31,6 +31,7 @@ import com.firenio.baseio.component.ChannelAcceptor;
 import com.firenio.baseio.component.ChannelEventListenerAdapter;
 import com.firenio.baseio.component.Frame;
 import com.firenio.baseio.component.IoEventHandle;
+import com.firenio.baseio.component.ChannelEventListener;
 import com.firenio.baseio.component.NioEventLoopGroup;
 import com.firenio.baseio.component.SocketOptions;
 import com.firenio.baseio.log.DebugUtil;
@@ -131,16 +132,19 @@ public class TestHttpLoadServer {
         group.setChannelReadBuffer(1024 * readBuf);
         group.setEventLoopSize(Util.availableProcessors() * core);
         group.setConcurrentFrameStack(false);
-        context.addProtocolCodec(new HttpCodec("baseio", fcache, lite, inline));
-        context.addChannelEventListener(new ChannelEventListenerAdapter() {
-
+        context.addChannelEventListener(new ChannelEventListener() {
+            
             @Override
             public void channelOpened(Channel ch) throws Exception {
-                ch.setOption(SocketOptions.TCP_NODELAY, 1);
-                ch.setOption(SocketOptions.TCP_QUICKACK, 1);
-                ch.setOption(SocketOptions.SO_KEEPALIVE, 0);
+                System.out.println("open "+System.currentTimeMillis());
+            }
+            
+            @Override
+            public void channelClosed(Channel ch) {
+                System.out.println("close "+System.currentTimeMillis());
             }
         });
+        context.addProtocolCodec(new HttpCodec("baseio", fcache, lite, inline));
         context.setIoEventHandle(eventHandle);
         context.bind();
     }

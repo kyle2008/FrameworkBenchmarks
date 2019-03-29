@@ -140,4 +140,16 @@ public class HelloServerHandler extends ChannelInboundHandlerAdapter {
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
 		ctx.flush();
 	}
+    
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // TODO Auto-generated method stub
+        System.out.println("open"+System.currentTimeMillis());
+    }
+    
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("close"+System.currentTimeMillis());
+    }
+    
 }
