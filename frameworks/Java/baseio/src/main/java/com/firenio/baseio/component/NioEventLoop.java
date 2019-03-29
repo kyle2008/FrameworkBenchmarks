@@ -601,7 +601,7 @@ public final class NioEventLoop extends EventLoop implements Attributes {
             Native.close(epfd);
         }
 
-        static final AtomicLong fd_time_cost = new AtomicLong();
+        static final AtomicLong fd_time_cost = new AtomicLong(-1);
 
         private void registChannel(NioEventLoop el, ChannelContext ctx, int fd, String ra, int lp,
                 int rp, boolean add, long fd_time) {
