@@ -17,9 +17,17 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.firenio</groupId>
-            <artifactId>baseio-all</artifactId>
-            <version>3.2.9.beta10</version>
+            <groupId>org.wildfly.openssl</groupId>
+            <artifactId>wildfly-openssl-java</artifactId>
+            <version>1.0.6.Final</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.2</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
