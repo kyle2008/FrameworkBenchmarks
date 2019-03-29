@@ -2,7 +2,6 @@
   "framework": "baseio",
   "tests": [{
       "default": {
-        "json_url": "/json",
         "plaintext_url": "/plaintext",
         "port": 8080,
         "approach": "Realistic",
