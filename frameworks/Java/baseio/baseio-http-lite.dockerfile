@@ -9,7 +9,7 @@ CMD java                       \
     -XX:+UseNUMA               \
     -XX:+UseParallelGC         \
     -XX:+AggressiveOpts        \
-    -XX:+PrintGCDetails        \
+#    -XX:+PrintGCDetails        \
     -Dlite=true                \
     -Dcore=1                   \
     -Dframe=16                 \

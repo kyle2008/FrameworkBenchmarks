@@ -135,12 +135,12 @@ public class TestHttpLoadServer {
             
             @Override
             public void channelOpened(Channel ch) throws Exception {
-                System.out.println("open "+System.currentTimeMillis());
+            //    System.out.println("open "+System.currentTimeMillis());
             }
             
             @Override
             public void channelClosed(Channel ch) {
-                System.out.println("close "+System.currentTimeMillis());
+            //    System.out.println("close "+System.currentTimeMillis());
             }
         });
         context.addProtocolCodec(new HttpCodec("baseio", fcache, lite, inline));
