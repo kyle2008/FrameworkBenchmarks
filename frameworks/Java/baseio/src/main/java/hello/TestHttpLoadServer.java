@@ -61,6 +61,7 @@ public class TestHttpLoadServer {
         boolean read = Util.getBooleanProperty("read");
         boolean pool = Util.getBooleanProperty("pool");
         boolean epoll = Util.getBooleanProperty("epoll");
+        boolean chlog = Util.getBooleanProperty("chlog");
         boolean direct = Util.getBooleanProperty("direct");
         boolean inline = Util.getBooleanProperty("inline");
         boolean unsafeBuf = Util.getBooleanProperty("unsafeBuf");
@@ -131,18 +132,20 @@ public class TestHttpLoadServer {
         group.setChannelReadBuffer(1024 * readBuf);
         group.setEventLoopSize(Util.availableProcessors() * core);
         group.setConcurrentFrameStack(false);
-        context.addChannelEventListener(new ChannelEventListener() {
-            
-            @Override
-            public void channelOpened(Channel ch) throws Exception {
-            //    System.out.println("open "+System.currentTimeMillis());
-            }
-            
-            @Override
-            public void channelClosed(Channel ch) {
-            //    System.out.println("close "+System.currentTimeMillis());
-            }
-        });
+        if(chlog){
+            context.addChannelEventListener(new ChannelEventListener() {
+                
+                @Override
+                public void channelOpened(Channel ch) throws Exception {
+                    System.out.println("open "+System.currentTimeMillis());
+                }
+                
+                @Override
+                public void channelClosed(Channel ch) {
+                    System.out.println("close "+System.currentTimeMillis());
+                }
+            });  
+        }
         context.addProtocolCodec(new HttpCodec("baseio", fcache, lite, inline));
         context.setIoEventHandle(eventHandle);
         context.bind();

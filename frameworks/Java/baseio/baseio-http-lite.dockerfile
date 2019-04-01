@@ -11,6 +11,7 @@ CMD java                       \
     -XX:+AggressiveOpts        \
 #    -XX:+PrintGCDetails        \
     -Dlite=true                \
+    -Dchlog=false              \
     -Dcore=1                   \
     -Dframe=16                 \
     -DreadBuf=512              \
