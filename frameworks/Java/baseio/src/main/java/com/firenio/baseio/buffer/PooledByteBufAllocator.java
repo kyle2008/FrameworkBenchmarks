@@ -40,8 +40,8 @@ public final class PooledByteBufAllocator extends ByteBufAllocator {
     public static final Map<ByteBuf, BufDebug> BUF_DEBUGS;
     static final int                           BYTEBUF_BUFFER    = 1024 * 8;
     static final boolean                       BYTEBUF_RECYCLE   = Options.isBufRecycle();
-    public static final ByteBufException       EXPANSION_FAILED  = EXPANSION_FAILED();
     static final boolean                       ENABLE_UNSAFE_BUF = Options.isEnableUnsafeBuf();
+    public static final ByteBufException       EXPANSION_FAILED  = EXPANSION_FAILED();
 
     static {
         if (Develop.BUF_DEBUG) {
@@ -79,10 +79,6 @@ public final class PooledByteBufAllocator extends ByteBufAllocator {
     @Override
     public ByteBuf allocate() {
         return allocate(unit);
-    }
-
-    public long getAddress() {
-        return address;
     }
 
     @Override
@@ -246,6 +242,10 @@ public final class PooledByteBufAllocator extends ByteBufAllocator {
                 // this.memory = null;
             }
         }
+    }
+
+    public long getAddress() {
+        return address;
     }
 
     @Override

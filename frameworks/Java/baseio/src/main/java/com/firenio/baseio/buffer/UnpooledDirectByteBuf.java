@@ -42,11 +42,6 @@ final class UnpooledDirectByteBuf extends DirectByteBuf {
     }
 
     @Override
-    public boolean isPooled() {
-        return false;
-    }
-
-    @Override
     public ByteBuf duplicate() {
         if (isReleased()) {
             throw new IllegalStateException("released");
@@ -73,6 +68,11 @@ final class UnpooledDirectByteBuf extends DirectByteBuf {
         } finally {
             ByteUtil.free(oldBuffer);
         }
+    }
+
+    @Override
+    public boolean isPooled() {
+        return false;
     }
 
     @Override

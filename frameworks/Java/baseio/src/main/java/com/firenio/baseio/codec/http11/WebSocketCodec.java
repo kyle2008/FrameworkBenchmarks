@@ -192,7 +192,7 @@ public class WebSocketCodec extends ProtocolCodec {
             buf.position(6);
             buf.putByte(6, header0);
             buf.putByte(7, (byte) 126);
-            buf.putUnsignedShort(8, size);
+            buf.putShort(8, size);
         } else {
             buf.putByte(header0);
             buf.putByte((byte) 127);

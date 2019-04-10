@@ -1,12 +1,12 @@
 /*
  * Copyright 2015 The Baseio Project
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,27 +62,27 @@ public final class Channel implements Runnable, Closeable {
     public static final SSLException           SSL_UNWRAP_OVER_LIMIT = SSL_UNWRAP_OVER_LIMIT();
     public static final IOException            TAST_REJECT           = TASK_REJECT();
 
-    private Object                             attachment;
-    private ProtocolCodec                      codec;
-    private final ChannelContext               context;
-    private final long                         creationTime          = System.currentTimeMillis();
-    private final ByteBuf[]                    currentWriteBufs;
-    private int                                currentWriteBufsLen;
-    private final String                       desc;
-    private final boolean                      enableSsl;
-    private final NioEventLoop                 eventLoop;
-    private final EventLoop                    executorEventLoop;
-    private boolean                            inEvent;
-    private long                               lastAccess;
-    private volatile boolean                   open                  = true;
-    private ByteBuf                            plainRemainBuf;
-    private final SSLEngine                    sslEngine;
-    private boolean                            sslHandshakeFinished;
-    private ByteBuf                            sslRemainBuf;
-    private byte                               sslWrapExt;
-    private final ChannelUnsafe                unsafe;
-    private final Queue<ByteBuf>               writeBufs;
-    
+    private          Object         attachment;
+    private          ProtocolCodec  codec;
+    private final    ChannelContext context;
+    private final    long           creationTime = System.currentTimeMillis();
+    private final    ByteBuf[]      currentWriteBufs;
+    private          int            currentWriteBufsLen;
+    private final    String         desc;
+    private final    boolean        enableSsl;
+    private final    NioEventLoop   eventLoop;
+    private final    EventLoop      executorEventLoop;
+    private          boolean        inEvent;
+    private          long           lastAccess;
+    private volatile boolean        open         = true;
+    private          ByteBuf        plainRemainBuf;
+    private final    SSLEngine      sslEngine;
+    private          boolean        sslHandshakeFinished;
+    private          ByteBuf        sslRemainBuf;
+    private          byte           sslWrapExt;
+    private final    ChannelUnsafe  unsafe;
+    private final    Queue<ByteBuf> writeBufs;
+
     Channel(NioEventLoop el, ChannelContext ctx, ChannelUnsafe unsafe) {
         this.context = ctx;
         this.eventLoop = el;
@@ -93,8 +93,7 @@ public final class Channel implements Runnable, Closeable {
         this.lastAccess = creationTime + el.getGroup().getIdleTime();
         this.writeBufs = new LinkedBlockingQueue<>();
         this.currentWriteBufs = new ByteBuf[el.getGroup().getWriteBuffers()];
-        String idhex = Integer.toHexString(unsafe.channelId);
-        this.desc = newDesc(idhex);
+        this.desc = newDesc(Integer.toHexString(unsafe.channelId));
         if (ctx.isEnableSsl()) {
             this.sslEngine = ctx.getSslContext().newEngine(getRemoteAddr(), getRemotePort());
         } else {
@@ -104,10 +103,10 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private void accept(ByteBuf src) throws Exception {
-        final ProtocolCodec codec = getCodec();
-        final IoEventHandle handle = getIoEventHandle();
-        final boolean enable_wel = getExecutorEventLoop() != null;
-        for (;;) {
+        final ProtocolCodec codec      = getCodec();
+        final IoEventHandle handle     = getIoEventHandle();
+        final boolean       enable_wel = getExecutorEventLoop() != null;
+        for (; ; ) {
             Frame f = codec.decode(this, src);
             if (f == null) {
                 if (Develop.BUF_DEBUG) {
@@ -198,7 +197,7 @@ public final class Channel implements Runnable, Closeable {
         } else {
             if (isOpen()) {
                 eventLoop.submit(new Runnable() {
-                    
+
                     @Override
                     public void run() {
                         Channel.this.close();
@@ -215,11 +214,13 @@ public final class Channel implements Runnable, Closeable {
                 try {
                     writeBufs.offer(wrap(ByteBuf.empty()));
                     write(eventLoop.getUnsafe());
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
             try {
                 sslEngine.closeInbound();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -363,12 +364,9 @@ public final class Channel implements Runnable, Closeable {
             return 1;
         } else {
             if (SslContext.OPENSSL_AVAILABLE) {
-                return ((src + SslContext.SSL_PACKET_BUFFER_SIZE - 1)
-                        / SslContext.SSL_PACKET_BUFFER_SIZE + 1) * ext + src;
+                return ((src + SslContext.SSL_PACKET_BUFFER_SIZE - 1) / SslContext.SSL_PACKET_BUFFER_SIZE + 1) * ext + src;
             } else {
-                return ((src + SslContext.SSL_PACKET_BUFFER_SIZE - 1)
-                        / SslContext.SSL_PACKET_BUFFER_SIZE)
-                        * (ext + SslContext.SSL_PACKET_BUFFER_SIZE);
+                return ((src + SslContext.SSL_PACKET_BUFFER_SIZE - 1) / SslContext.SSL_PACKET_BUFFER_SIZE) * (ext + SslContext.SSL_PACKET_BUFFER_SIZE);
             }
         }
     }
@@ -391,37 +389,37 @@ public final class Channel implements Runnable, Closeable {
     }
 
     /**
-     <pre>
-               record type (1 byte)
-            /
-           /    version (1 byte major, 1 byte minor)
-          /    /
-         /    /         length (2 bytes)
-        /    /         /
-     +----+----+----+----+----+
-     |    |    |    |    |    |
-     |    |    |    |    |    | TLS Record header
-     +----+----+----+----+----+
-    
-    
-     Record Type Values       dec      hex
-     -------------------------------------
-     CHANGE_CIPHER_SPEC        20     0x14
-     ALERT                     21     0x15
-     HANDSHAKE                 22     0x16
-     APPLICATION_DATA          23     0x17
-    
-    
-     Version Values            dec     hex
-     -------------------------------------
-     SSL 3.0                   3,0  0x0300
-     TLS 1.0                   3,1  0x0301
-     TLS 1.1                   3,2  0x0302
-     TLS 1.2                   3,3  0x0303
-     
-     ref:http://blog.fourthbit.com/2014/12/23/traffic-analysis-of-an-ssl-slash-tls-session/
-     </pre>
-    */
+     * <pre>
+     * record type (1 byte)
+     * /
+     * /    version (1 byte major, 1 byte minor)
+     * /    /
+     * /    /         length (2 bytes)
+     * /    /         /
+     * +----+----+----+----+----+
+     * |    |    |    |    |    |
+     * |    |    |    |    |    | TLS Record header
+     * +----+----+----+----+----+
+     *
+     *
+     * Record Type Values       dec      hex
+     * -------------------------------------
+     * CHANGE_CIPHER_SPEC        20     0x14
+     * ALERT                     21     0x15
+     * HANDSHAKE                 22     0x16
+     * APPLICATION_DATA          23     0x17
+     *
+     *
+     * Version Values            dec     hex
+     * -------------------------------------
+     * SSL 3.0                   3,0  0x0300
+     * TLS 1.0                   3,1  0x0301
+     * TLS 1.1                   3,2  0x0302
+     * TLS 1.2                   3,3  0x0303
+     *
+     * ref:http://blog.fourthbit.com/2014/12/23/traffic-analysis-of-an-ssl-slash-tls-session/
+     * </pre>
+     */
     private boolean isEnoughSslUnwrap(ByteBuf src) throws SSLException {
         if (src.remaining() < 5) {
             return false;
@@ -460,10 +458,10 @@ public final class Channel implements Runnable, Closeable {
         return sslHandshakeFinished;
     }
 
-    private String newDesc(String idhex) {
+    private String newDesc(String id_hex) {
         StringBuilder sb = FastThreadLocal.get().getStringBuilder();
         sb.append("[id(0x");
-        sb.append(idhex);
+        sb.append(id_hex);
         sb.append(")R/");
         sb.append(getRemoteAddr());
         sb.append(':');
@@ -484,65 +482,33 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private void read_plain() throws Exception {
-        NioEventLoop el = eventLoop;
-        ByteBuf src = el.getReadBuf();
-        for (;;) {
+        NioEventLoop el  = eventLoop;
+        ByteBuf      src = el.getReadBuf();
+        for (; ; ) {
             src.clear();
             readPlainRemainingBuf(src);
-            int length = unsafe.read(el);
-            if (length < 1) {
-                if (length == -1) {
-                    Util.close(this);
-                    return;
-                }
-                if (src.position() > 0) {
-                    src.flip();
-                    plainRemainBuf = sliceRemain(src);
-                }
+            if (!read_data(el, src)) {
                 return;
             }
-            if (Native.EPOLL_AVAIABLE) {
-                src.absLimit(src.absPos() + length);
-                src.absPos(0);
-            } else {
-                src.reverse();
-                src.flip();
-            }
-            boolean b = src.absLimit() != src.capacity();
+            boolean full = src.limit() == src.capacity();
             accept(src);
-            if (b) {
+            if (!full) {
                 break;
             }
         }
     }
 
     private void read_ssl() throws Exception {
-        NioEventLoop el = eventLoop;
-        ByteBuf src = el.getReadBuf();
-        for (;;) {
+        NioEventLoop el  = eventLoop;
+        ByteBuf      src = el.getReadBuf();
+        for (; ; ) {
             src.clear();
             readSslRemainingBuf(src);
-            int length = unsafe.read(el);
-            if (length < 1) {
-                if (length == -1) {
-                    Util.close(this);
-                    return;
-                }
-                if (src.position() > 0) {
-                    src.flip();
-                    sslRemainBuf = sliceRemain(src);
-                }
+            if (!read_data(el, src)) {
                 return;
             }
-            if (Native.EPOLL_AVAIABLE) {
-                src.absLimit(src.absPos() + length);
-                src.absPos(0);
-            } else {
-                src.reverse();
-                src.flip();
-            }
-            boolean b = src.absLimit() != src.capacity();
-            for (;;) {
+            boolean full = src.limit() == src.capacity();
+            for (; ; ) {
                 if (isEnoughSslUnwrap(src)) {
                     ByteBuf res = unwrap(src);
                     if (res != null) {
@@ -559,10 +525,37 @@ public final class Channel implements Runnable, Closeable {
                     break;
                 }
             }
-            if (b) {
+            if (!full) {
                 break;
             }
         }
+    }
+
+    private boolean read_data(NioEventLoop el, ByteBuf src) {
+        int length = unsafe.read(el);
+        if (length < 1) {
+            if (length == -1) {
+                Util.close(this);
+                return false;
+            }
+            if (src.position() > 0) {
+                src.flip();
+                if (enableSsl) {
+                    sslRemainBuf = sliceRemain(src);
+                } else {
+                    plainRemainBuf = sliceRemain(src);
+                }
+            }
+            return false;
+        }
+        if (Native.EPOLL_AVAIABLE) {
+            src.absLimit(src.absPos() + length);
+            src.absPos(0);
+        } else {
+            src.reverse();
+            src.flip();
+        }
+        return true;
     }
 
     private void readPlainRemainingBuf(ByteBuf dst) {
@@ -590,8 +583,8 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private void releaseWriteBufArray() {
-        final ByteBuf[] cwbs = this.currentWriteBufs;
-        final int maxLen = cwbs.length;
+        final ByteBuf[] cwbs   = this.currentWriteBufs;
+        final int       maxLen = cwbs.length;
         // 这里有可能是因为异常关闭，currentWriteFrameLen不准确
         // 对所有不为空的frame release
         for (int i = 0; i < maxLen; i++) {
@@ -608,7 +601,7 @@ public final class Channel implements Runnable, Closeable {
         Queue<ByteBuf> wfs = this.writeBufs;
         if (!wfs.isEmpty()) {
             ByteBuf buf = wfs.poll();
-            for (; buf != null;) {
+            for (; buf != null; ) {
                 Util.release(buf);
                 buf = wfs.poll();
             }
@@ -618,7 +611,7 @@ public final class Channel implements Runnable, Closeable {
     private void removeChannel() {
         Integer id = getChannelId();
         context.getChannelManager().removeChannel(id);
-        eventLoop.removeChannel(id.intValue());
+        eventLoop.removeChannel(id);
     }
 
     @Override
@@ -637,7 +630,7 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private void runDelegatedTasks(SSLEngine engine) {
-        for (;;) {
+        for (; ; ) {
             Runnable task = engine.getDelegatedTask();
             if (task == null) {
                 break;
@@ -727,7 +720,7 @@ public final class Channel implements Runnable, Closeable {
 
     private ByteBuf unwrap(ByteBuf src) throws IOException {
         SSLEngine sslEngine = getSSLEngine();
-        ByteBuf dst = FastThreadLocal.get().getSslUnwrapBuf();
+        ByteBuf   dst       = FastThreadLocal.get().getSslUnwrapBuf();
         if (sslHandshakeFinished) {
             dst.clear();
             readPlainRemainingBuf(dst);
@@ -747,9 +740,9 @@ public final class Channel implements Runnable, Closeable {
             synchByteBuf(result, src, dst);
             return dst.flip();
         } else {
-            for (;;) {
+            for (; ; ) {
                 dst.clear();
-                SSLEngineResult result = sslEngine.unwrap(src.nioBuffer(), dst.nioBuffer());
+                SSLEngineResult result          = sslEngine.unwrap(src.nioBuffer(), dst.nioBuffer());
                 HandshakeStatus handshakeStatus = result.getHandshakeStatus();
                 synchByteBuf(result, src, dst);
                 if (handshakeStatus == HandshakeStatus.NEED_WRAP) {
@@ -772,9 +765,9 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private ByteBuf wrap(ByteBuf src) throws IOException {
-        SSLEngine engine = getSSLEngine();
-        ByteBufAllocator alloc = alloc();
-        ByteBuf out = null;
+        SSLEngine        engine = getSSLEngine();
+        ByteBufAllocator alloc  = alloc();
+        ByteBuf          out    = null;
         try {
             if (sslHandshakeFinished) {
                 byte sslWrapExt = this.sslWrapExt;
@@ -784,9 +777,9 @@ public final class Channel implements Runnable, Closeable {
                     out = alloc.allocate(guessWrapOut(src.limit(), sslWrapExt & 0xff));
                 }
                 final int SSL_PACKET_BUFFER_SIZE = SslContext.SSL_PACKET_BUFFER_SIZE;
-                for (;;) {
+                for (; ; ) {
                     SSLEngineResult result = engine.wrap(src.nioBuffer(), out.nioBuffer());
-                    Status status = result.getStatus();
+                    Status          status = result.getStatus();
                     synchByteBuf(result, src, out);
                     if (status == Status.CLOSED) {
                         return out.flip();
@@ -800,8 +793,8 @@ public final class Channel implements Runnable, Closeable {
                         if (sslWrapExt == 0) {
                             int srcLen = src.limit();
                             int outLen = out.position();
-                            int y = ((srcLen + 1) / SSL_PACKET_BUFFER_SIZE) + 1;
-                            int u = ((outLen - srcLen) / y) * 2;
+                            int y      = ((srcLen + 1) / SSL_PACKET_BUFFER_SIZE) + 1;
+                            int u      = ((outLen - srcLen) / y) * 2;
                             this.sslWrapExt = (byte) u;
                         }
                         return out.flip();
@@ -809,10 +802,10 @@ public final class Channel implements Runnable, Closeable {
                 }
             } else {
                 ByteBuf dst = FastThreadLocal.get().getSslWrapBuf();
-                for (;;) {
+                for (; ; ) {
                     dst.clear();
-                    SSLEngineResult result = engine.wrap(src.nioBuffer(), dst.nioBuffer());
-                    Status status = result.getStatus();
+                    SSLEngineResult result          = engine.wrap(src.nioBuffer(), dst.nioBuffer());
+                    Status          status          = result.getStatus();
                     HandshakeStatus handshakeStatus = result.getHandshakeStatus();
                     synchByteBuf(result, src, dst);
                     if (status == Status.CLOSED) {
@@ -919,11 +912,11 @@ public final class Channel implements Runnable, Closeable {
 
     static final class EpollChannelUnsafe extends ChannelUnsafe {
 
-        private final int epfd;
-        private final int fd;
-        private boolean   interestWrite;
+        private final int     epfd;
+        private final int     fd;
+        private       boolean interestWrite;
 
-        public EpollChannelUnsafe(int epfd, int fd, String ra, int lp, int rp) {
+        EpollChannelUnsafe(int epfd, int fd, String ra, int lp, int rp) {
             super(ra, lp, rp, fd);
             this.fd = fd;
             this.epfd = epfd;
@@ -960,14 +953,14 @@ public final class Channel implements Runnable, Closeable {
 
         @Override
         int write(NioEventLoopUnsafe unsafe, Channel ch) {
-            final int fd = this.fd;
-            final ByteBuf[] cw_bufs = ch.currentWriteBufs;
+            final int            fd         = this.fd;
+            final ByteBuf[]      cw_bufs    = ch.currentWriteBufs;
             final Queue<ByteBuf> write_bufs = ch.writeBufs;
-            final long iovec = ((EpollNioEventLoopUnsafe) unsafe).getIovec();
-            final int iov_len = cw_bufs.length;
-            for (;;) {
+            final long           iovec      = ((EpollNioEventLoopUnsafe) unsafe).getIovec();
+            final int            iov_len    = cw_bufs.length;
+            for (; ; ) {
                 int cw_len = ch.currentWriteBufsLen;
-                for (; cw_len < iov_len;) {
+                for (; cw_len < iov_len; ) {
                     ByteBuf buf = write_bufs.poll();
                     if (buf == null) {
                         break;
@@ -980,7 +973,7 @@ public final class Channel implements Runnable, Closeable {
                 }
                 if (cw_len == 1) {
                     ByteBuf buf = cw_bufs[0];
-                    int len = Native.write(fd, buf.address() + buf.absPos(), buf.remaining());
+                    int     len = Native.write(fd, buf.address() + buf.absPos(), buf.remaining());
                     if (len == -1) {
                         return -1;
                     }
@@ -1014,7 +1007,7 @@ public final class Channel implements Runnable, Closeable {
                     }
                     for (int i = 0; i < cw_len; i++) {
                         ByteBuf buf = cw_bufs[i];
-                        int r = buf.remaining();
+                        int     r   = buf.remaining();
                         if (len < r) {
                             buf.skip((int) len);
                             int remain = cw_len - i;
@@ -1048,8 +1041,8 @@ public final class Channel implements Runnable, Closeable {
         static final Field   S_FD_FD;
 
         static {
-            Field sfd = null;
-            Field sfdfd = null;
+            Field   sfd      = null;
+            Field   sfdfd    = null;
             boolean enableFd = false;
             try {
                 SocketChannel ch = SocketChannel.open();
@@ -1065,14 +1058,15 @@ public final class Channel implements Runnable, Closeable {
                     }
 
                 }
-            } catch (Throwable e) {}
+            } catch (Throwable e) {
+            }
             S_FD = sfd;
             S_FD_FD = sfdfd;
             ENABLE_FD = enableFd;
         }
 
         private final SocketChannel channel;
-        private boolean             interestWrite;
+        private       boolean       interestWrite;
         private final SelectionKey  key;
 
         JavaChannelUnsafe(SelectionKey key, String ra, int lp, int rp, Integer chid) {
@@ -1131,9 +1125,9 @@ public final class Channel implements Runnable, Closeable {
             }
         }
 
-        private long nativeWrite(ByteBuffer[] srcs, int off, int len) {
+        private long nativeWrite(ByteBuffer[] srcs, int len) {
             try {
-                return channel.write(srcs, off, len);
+                return channel.write(srcs, 0, len);
             } catch (IOException e) {
                 return -1;
             }
@@ -1162,14 +1156,14 @@ public final class Channel implements Runnable, Closeable {
 
         @Override
         int write(NioEventLoopUnsafe unsafe, Channel ch) {
-            final ByteBuf[] cwBufs = ch.currentWriteBufs;
-            final Queue<ByteBuf> writeBufs = ch.writeBufs;
-            final JavaNioEventLoopUnsafe un = (JavaNioEventLoopUnsafe) unsafe;
-            final ByteBuffer[] writeBuffers = un.getWriteBuffers();
-            final int maxLen = cwBufs.length;
-            for (;;) {
+            final ByteBuf[]              cwBufs       = ch.currentWriteBufs;
+            final Queue<ByteBuf>         writeBufs    = ch.writeBufs;
+            final JavaNioEventLoopUnsafe un           = (JavaNioEventLoopUnsafe) unsafe;
+            final ByteBuffer[]           writeBuffers = un.getWriteBuffers();
+            final int                    maxLen       = cwBufs.length;
+            for (; ; ) {
                 int cwLen = ch.currentWriteBufsLen;
-                for (; cwLen < maxLen;) {
+                for (; cwLen < maxLen; ) {
                     ByteBuf buf = writeBufs.poll();
                     if (buf == null) {
                         break;
@@ -1182,7 +1176,7 @@ public final class Channel implements Runnable, Closeable {
                 }
                 if (cwLen == 1) {
                     ByteBuffer nioBuf = cwBufs[0].nioBuffer();
-                    int len = nativeWrite(nioBuf);
+                    int        len    = nativeWrite(nioBuf);
                     if (len == -1) {
                         return -1;
                     }
@@ -1206,7 +1200,7 @@ public final class Channel implements Runnable, Closeable {
                     for (int i = 0; i < cwLen; i++) {
                         writeBuffers[i] = cwBufs[i].nioBuffer();
                     }
-                    long len = nativeWrite(writeBuffers, 0, cwLen);
+                    long len = nativeWrite(writeBuffers, cwLen);
                     if (len == -1) {
                         return -1;
                     }
@@ -1238,9 +1232,13 @@ public final class Channel implements Runnable, Closeable {
 
         static int getFd(SocketChannel javaChannel) {
             try {
-                Object fd = S_FD.get(javaChannel);
+                Object  fd   = S_FD.get(javaChannel);
                 Integer fdfd = (Integer) S_FD_FD.get(fd);
-                return fdfd.intValue();
+                if (fdfd != null) {
+                    return fdfd;
+                } else {
+                    return -1;
+                }
             } catch (Throwable e) {
                 return -1;
             }
@@ -1266,18 +1264,15 @@ public final class Channel implements Runnable, Closeable {
     }
 
     private static SSLException NOT_TLS() {
-        return Util.unknownStackTrace(new SSLException("NOT TLS"), Channel.class,
-                "isEnoughSslUnwrap()");
+        return Util.unknownStackTrace(new SSLException("NOT TLS"), Channel.class, "isEnoughSslUnwrap()");
     }
 
     private static SSLException SSL_PACKET_OVER_LIMIT() {
-        return Util.unknownStackTrace(new SSLException("over limit (" + SSL_PACKET_LIMIT + ")"),
-                Channel.class, "isEnoughSslUnwrap()");
+        return Util.unknownStackTrace(new SSLException("over limit (" + SSL_PACKET_LIMIT + ")"), Channel.class, "isEnoughSslUnwrap()");
     }
 
     private static SSLException SSL_UNWRAP_OVER_LIMIT() {
-        return unknownStackTrace(new SSLException("over limit (SSL_UNWRAP_BUFFER_SIZE)"),
-                Channel.class, "unwrap()");
+        return unknownStackTrace(new SSLException("over limit (SSL_UNWRAP_BUFFER_SIZE)"), Channel.class, "unwrap()");
     }
 
     private static IOException TASK_REJECT() {

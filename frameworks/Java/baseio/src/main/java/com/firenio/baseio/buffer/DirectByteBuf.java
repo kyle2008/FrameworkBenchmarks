@@ -74,11 +74,6 @@ abstract class DirectByteBuf extends ByteBuf {
     }
 
     @Override
-    public void getBytes(byte[] dst, int offset, int length) {
-        memory.get(dst, offset, length);
-    }
-
-    @Override
     protected int get0(ByteBuffer dst, int len) {
         if (dst.hasArray()) {
             copy(address() + absPos(), dst.array(), dst.position(), len);
@@ -98,6 +93,11 @@ abstract class DirectByteBuf extends ByteBuf {
     @Override
     public byte getByte(int index) {
         return memory.get(ix(index));
+    }
+
+    @Override
+    public void getBytes(byte[] dst, int offset, int length) {
+        memory.get(dst, offset, length);
     }
 
     @Override
@@ -314,8 +314,19 @@ abstract class DirectByteBuf extends ByteBuf {
     }
 
     @Override
-    protected void putBytes0(byte[] src, int offset, int length) {
+    public void putByte(int index, byte b) {
+        memory.put(ix(index), b);
+    }
+
+    @Override
+    protected void putByte0(byte b) {
+        memory.put(b);
+    }
+
+    @Override
+    protected int putBytes0(byte[] src, int offset, int length) {
         memory.put(src, offset, length);
+        return length;
     }
 
     @Override
@@ -340,16 +351,6 @@ abstract class DirectByteBuf extends ByteBuf {
         src.position(src.position() + len);
         skip(len);
         return len;
-    }
-
-    @Override
-    public void putByte(int index, byte b) {
-        memory.put(ix(index), b);
-    }
-
-    @Override
-    protected void putByte0(byte b) {
-        memory.put(b);
     }
 
     @Override
@@ -393,62 +394,22 @@ abstract class DirectByteBuf extends ByteBuf {
     }
 
     @Override
-    public void putShort(int index, short value) {
-        memory.putShort(ix(index), value);
-    }
-
-    @Override
-    protected void putShort0(short value) {
-        memory.putShort(value);
-    }
-
-    @Override
-    public void putShortLE(int index, short value) {
-        memory.putShort(ix(index), Short.reverseBytes(value));
-    }
-
-    @Override
-    protected void putShortLE0(short value) {
-        memory.putShort(Short.reverseBytes(value));
-    }
-
-    @Override
-    public void putUnsignedInt(int index, long value) {
-        memory.putInt(ix(index), (int) value);
-    }
-
-    @Override
-    protected void putUnsignedInt0(long value) {
-        memory.putInt((int) value);
-    }
-
-    @Override
-    public void putUnsignedIntLE(int index, long value) {
-        memory.putInt(ix(index), Integer.reverseBytes((int) value));
-    }
-
-    @Override
-    protected void putUnsignedIntLE0(long value) {
-        memory.putInt(Integer.reverseBytes((int) value));
-    }
-
-    @Override
-    public void putUnsignedShort(int index, int value) {
+    public void putShort(int index, int value) {
         memory.putShort(ix(index), (short) value);
     }
 
     @Override
-    protected void putUnsignedShort0(int value) {
+    protected void putShort0(int value) {
         memory.putShort((short) value);
     }
 
     @Override
-    public void putUnsignedShortLE(int index, int value) {
+    public void putShortLE(int index, int value) {
         memory.putShort(ix(index), Short.reverseBytes((short) value));
     }
 
     @Override
-    protected void putUnsignedShortLE0(int value) {
+    protected void putShortLE0(int value) {
         memory.putShort(Short.reverseBytes((short) value));
     }
 

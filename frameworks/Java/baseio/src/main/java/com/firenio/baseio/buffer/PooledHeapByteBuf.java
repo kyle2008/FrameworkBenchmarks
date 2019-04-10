@@ -38,11 +38,6 @@ final class PooledHeapByteBuf extends HeapByteBuf {
     }
     
     @Override
-    public boolean isPooled() {
-        return true;
-    }
-
-    @Override
     public void capacity(int cap) {
         this.capacity = cap;
     }
@@ -59,6 +54,11 @@ final class PooledHeapByteBuf extends HeapByteBuf {
     @Override
     public final void expansion(int cap) {
         allocator.expansion(this, cap);
+    }
+
+    @Override
+    public boolean isPooled() {
+        return true;
     }
 
     @Override

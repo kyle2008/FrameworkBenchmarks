@@ -1,12 +1,12 @@
 /*
  * Copyright 2015 The Baseio Project
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,10 +25,10 @@ import com.firenio.baseio.log.LoggerFactory;
 
 public abstract class EventLoop extends LifeCycle implements Runnable {
 
-    private static final Logger   logger       = LoggerFactory.getLogger(EventLoop.class);
-    private final EventLoopGroup  defaultGroup = new DefaultEventLoopGroup(this);
-    private FastThreadLocalThread monitor      = null;
-    private final String          threadName;
+    private static final Logger                logger       = LoggerFactory.getLogger(EventLoop.class);
+    private final        EventLoopGroup        defaultGroup = new DefaultEventLoopGroup(this);
+    private              FastThreadLocalThread monitor      = null;
+    private final        String                threadName;
 
     public EventLoop(String threadName) {
         this.threadName = threadName;
@@ -44,7 +44,7 @@ public abstract class EventLoop extends LifeCycle implements Runnable {
         }
     }
 
-    protected void doLoop() throws Exception {}
+    protected void doLoop() throws Exception { }
 
     @Override
     protected void doStart() throws Exception {
@@ -53,7 +53,7 @@ public abstract class EventLoop extends LifeCycle implements Runnable {
     }
 
     @Override
-    protected void doStop() {}
+    protected void doStop() { }
 
     public EventLoopGroup getGroup() {
         return defaultGroup;
@@ -83,7 +83,7 @@ public abstract class EventLoop extends LifeCycle implements Runnable {
 
     @Override
     public void run() {
-        for (; isRunning();) {
+        for (; isRunning(); ) {
             try {
                 doLoop();
             } catch (Throwable e) {
@@ -110,7 +110,8 @@ public abstract class EventLoop extends LifeCycle implements Runnable {
         }
 
         @Override
-        protected void doStart() throws Exception {}
+        protected void doStart() throws Exception {
+        }
 
         @Override
         protected void doStop() {

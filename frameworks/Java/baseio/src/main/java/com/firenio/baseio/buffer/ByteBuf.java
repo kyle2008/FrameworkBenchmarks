@@ -36,8 +36,6 @@ public abstract class ByteBuf implements Releasable {
 
     protected volatile int referenceCount = 0;
 
-    public abstract long address();
-
     public abstract byte absByte(int pos);
 
     public abstract int absLimit();
@@ -61,7 +59,7 @@ public abstract class ByteBuf implements Releasable {
         }
     }
 
-    public abstract boolean isPooled();
+    public abstract long address();
 
     public abstract byte[] array();
 
@@ -88,6 +86,16 @@ public abstract class ByteBuf implements Releasable {
     public abstract void expansion(int cap);
 
     public abstract ByteBuf flip();
+
+    protected abstract int get0(ByteBuffer dst, int len);
+
+    public abstract byte getByte();
+
+    public abstract byte getByte(int index);
+
+    public byte[] getBytes() {
+        return getBytes(remaining());
+    }
 
     public void getBytes(byte[] dst) {
         getBytes(dst, 0, dst.length);
@@ -120,16 +128,6 @@ public abstract class ByteBuf implements Releasable {
         return get0(dst, len);
     }
 
-    protected abstract int get0(ByteBuffer dst, int len);
-
-    public abstract byte getByte();
-
-    public abstract byte getByte(int index);
-
-    public byte[] getBytes() {
-        return getBytes(remaining());
-    }
-
     public byte[] getBytes(int length) {
         byte[] bytes = new byte[length];
         getBytes(bytes);
@@ -151,6 +149,38 @@ public abstract class ByteBuf implements Releasable {
     public abstract long getLongLE();
 
     public abstract long getLongLE(int index);
+
+    public float getFloat() {
+        return Float.intBitsToFloat(getInt());
+    }
+
+    public float getFloat(int index) {
+        return Float.intBitsToFloat(getInt(index));
+    }
+
+    public float getFloatLE() {
+        return Float.intBitsToFloat(getIntLE());
+    }
+
+    public float getFloatLE(int index) {
+        return Float.intBitsToFloat(getIntLE(index));
+    }
+
+    public double getDouble() {
+        return Double.longBitsToDouble(getLong());
+    }
+
+    public double getDouble(int index) {
+        return Double.longBitsToDouble(getLong(index));
+    }
+
+    public double getDoubleLE() {
+        return Double.longBitsToDouble(getLongLE());
+    }
+
+    public double getDoubleLE(int index) {
+        return Double.longBitsToDouble(getLongLE(index));
+    }
 
     public abstract ByteBuffer getNioBuffer();
 
@@ -196,6 +226,8 @@ public abstract class ByteBuf implements Releasable {
 
     public abstract int indexOf(byte b, int absPos, int size);
 
+    public abstract boolean isPooled();
+
     @Override
     public boolean isReleased() {
         return referenceCount < 1;
@@ -239,13 +271,33 @@ public abstract class ByteBuf implements Releasable {
         return this;
     }
 
+    //---------------------------------put byte---------------------------------//
+
+    public void putByte(byte b) {
+        ensureWritable(1);
+        putByte0(b);
+    }
+
+    public abstract void putByte(int index, byte b);
+
+    protected abstract void putByte0(byte b);
+
+    //---------------------------------put bytes---------------------------------//
+
     public void putBytes(byte[] src) {
         putBytes(src, 0, src.length);
     }
 
-    public void putBytes(byte[] src, int offset, int length) {
-        ensureWritable(length);
-        putBytes0(src, offset, length);
+    public int putBytes(byte[] src, int offset, int length) {
+        if (AUTO_EXPANSION) {
+            ensureWritable(length);
+            return putBytes0(src, offset, length);
+        } else {
+            if (!hasRemaining()) {
+                return 0;
+            }
+            return putBytes0(src, offset, Math.min(remaining(), length));
+        }
     }
 
     public int putBytes(ByteBuf src) {
@@ -280,7 +332,7 @@ public abstract class ByteBuf implements Releasable {
         return putBytes0(src, len);
     }
 
-    protected abstract void putBytes0(byte[] src, int offset, int length);
+    protected abstract int putBytes0(byte[] src, int offset, int length);
 
     protected int putBytes0(ByteBuf src, int len) {
         if (AUTO_EXPANSION) {
@@ -310,14 +362,7 @@ public abstract class ByteBuf implements Releasable {
 
     protected abstract int putBytes00(ByteBuffer src, int len);
 
-    public void putByte(byte b) {
-        ensureWritable(1);
-        putByte0(b);
-    }
-
-    public abstract void putByte(int index, byte b);
-
-    protected abstract void putByte0(byte b);
+    //---------------------------------put int---------------------------------//
 
     public void putInt(int value) {
         ensureWritable(4);
@@ -337,6 +382,8 @@ public abstract class ByteBuf implements Releasable {
 
     protected abstract void putIntLE0(int value);
 
+    //---------------------------------put long---------------------------------//
+
     public abstract void putLong(int index, long value);
 
     public void putLong(long value) {
@@ -355,59 +402,61 @@ public abstract class ByteBuf implements Releasable {
 
     protected abstract void putLongLE0(long value);
 
-    public abstract void putShort(int index, short value);
+    //---------------------------------put double---------------------------------//
 
-    public void putShort(short value) {
+    public void putDouble(int index, double value) {
+        putLong(index, Double.doubleToRawLongBits(value));
+    }
+
+    public void putDouble(double value) {
+        putLong(Double.doubleToRawLongBits(value));
+    }
+
+    public void putDoubleLE(int index, double value) {
+        putLongLE(index, Double.doubleToRawLongBits(value));
+    }
+
+    public void putDoubleLE(double value) {
+        putLongLE(Double.doubleToRawLongBits(value));
+    }
+
+    //---------------------------------put float---------------------------------//
+
+    public void putFloat(int index, float value) {
+        putInt(index, Float.floatToRawIntBits(value));
+    }
+
+    public void putFloat(float value) {
+        putInt(Float.floatToRawIntBits(value));
+    }
+
+    public void putFloatLE(int index, float value) {
+        putIntLE(index, Float.floatToRawIntBits(value));
+    }
+
+    public void putFloatLE(float value) {
+        putIntLE(Float.floatToRawIntBits(value));
+    }
+
+    //---------------------------------put short---------------------------------//
+
+    public void putShort(int value) {
         ensureWritable(2);
         putShort0(value);
     }
 
-    protected abstract void putShort0(short value);
+    public abstract void putShort(int index, int value);
 
-    public abstract void putShortLE(int index, short value);
+    protected abstract void putShort0(int value);
 
-    public void putShortLE(short value) {
+    public void putShortLE(int value) {
         ensureWritable(2);
         putShortLE0(value);
     }
 
-    protected abstract void putShortLE0(short value);
+    public abstract void putShortLE(int index, int value);
 
-    public abstract void putUnsignedInt(int index, long value);
-
-    public void putUnsignedInt(long value) {
-        ensureWritable(4);
-        putUnsignedInt0(value);
-    }
-
-    protected abstract void putUnsignedInt0(long value);
-
-    public abstract void putUnsignedIntLE(int index, long value);
-
-    public void putUnsignedIntLE(long value) {
-        ensureWritable(4);
-        putUnsignedIntLE0(value);
-    }
-
-    protected abstract void putUnsignedIntLE0(long value);
-
-    public void putUnsignedShort(int value) {
-        ensureWritable(2);
-        putUnsignedShort0(value);
-    }
-
-    public abstract void putUnsignedShort(int index, int value);
-
-    protected abstract void putUnsignedShort0(int value);
-
-    public void putUnsignedShortLE(int value) {
-        ensureWritable(2);
-        putUnsignedShortLE0(value);
-    }
-
-    public abstract void putUnsignedShortLE(int index, int value);
-
-    protected abstract void putUnsignedShortLE0(int value);
+    protected abstract void putShortLE0(int value);
 
     @Override
     public final void release() {

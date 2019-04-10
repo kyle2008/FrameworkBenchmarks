@@ -35,11 +35,6 @@ final class PooledDirectByteBuf extends DirectByteBuf {
     }
 
     @Override
-    public boolean isPooled() {
-        return true;
-    }
-
-    @Override
     public int capacity() {
         return capacity;
     }
@@ -61,6 +56,11 @@ final class PooledDirectByteBuf extends DirectByteBuf {
     @Override
     public final void expansion(int cap) {
         allocator.expansion(this, cap);
+    }
+
+    @Override
+    public boolean isPooled() {
+        return true;
     }
 
     @Override

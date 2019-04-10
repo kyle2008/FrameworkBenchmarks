@@ -25,6 +25,7 @@ import com.firenio.baseio.codec.http11.HttpContentType;
 import com.firenio.baseio.codec.http11.HttpDateUtil;
 import com.firenio.baseio.codec.http11.HttpFrame;
 import com.firenio.baseio.codec.http11.HttpStatus;
+import com.firenio.baseio.collection.ByteTree;
 import com.firenio.baseio.common.Util;
 import com.firenio.baseio.component.Channel;
 import com.firenio.baseio.component.ChannelAcceptor;
@@ -32,6 +33,7 @@ import com.firenio.baseio.component.ChannelEventListener;
 import com.firenio.baseio.component.Frame;
 import com.firenio.baseio.component.IoEventHandle;
 import com.firenio.baseio.component.NioEventLoopGroup;
+import com.firenio.baseio.component.ProtocolCodec;
 import com.firenio.baseio.log.DebugUtil;
 import com.firenio.baseio.log.LoggerFactory;
 import com.jsoniter.output.JsonStream;
@@ -121,6 +123,9 @@ public class TestHttpLoadServer {
             pool_cap = 1024 * 8;
             pool_unit = 256 * 16;
         }
+        ByteTree cachedUrls = new ByteTree();
+        cachedUrls.add("/plaintext");
+        cachedUrls.add("/json");
         HttpDateUtil.start();
         NioEventLoopGroup group = new NioEventLoopGroup();
         ChannelAcceptor context = new ChannelAcceptor(group, 8080);
@@ -146,7 +151,7 @@ public class TestHttpLoadServer {
                 }
             });  
         }
-        context.addProtocolCodec(new HttpCodec("baseio", fcache, lite, inline));
+        ProtocolCodec codec = new HttpCodec("baseio", fcache, lite, inline, cachedUrls);
         context.setIoEventHandle(eventHandle);
         context.bind();
     }

@@ -41,11 +41,6 @@ class UnpooledHeapByteBuf extends HeapByteBuf {
     }
 
     @Override
-    public boolean isPooled() {
-        return false;
-    }
-
-    @Override
     public int capacity() {
         return memory.length;
     }
@@ -64,6 +59,11 @@ class UnpooledHeapByteBuf extends HeapByteBuf {
         }
         memory = newBuffer;
         limit = capacity();
+    }
+
+    @Override
+    public boolean isPooled() {
+        return false;
     }
 
     @Override

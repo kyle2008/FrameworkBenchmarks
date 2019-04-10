@@ -33,11 +33,6 @@ final class PooledUnsafeByteBuf extends UnsafeByteBuf {
     }
 
     @Override
-    public boolean isPooled() {
-        return true;
-    }
-
-    @Override
     public int capacity() {
         return capacity;
     }
@@ -59,6 +54,11 @@ final class PooledUnsafeByteBuf extends UnsafeByteBuf {
     @Override
     public final void expansion(int cap) {
         allocator.expansion(this, cap);
+    }
+
+    @Override
+    public boolean isPooled() {
+        return true;
     }
 
     @Override

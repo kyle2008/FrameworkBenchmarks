@@ -1,12 +1,12 @@
 /*
  * Copyright 2015 The Baseio Project
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,12 +31,12 @@ import com.firenio.baseio.component.Channel;
 import com.firenio.baseio.component.Frame;
 
 /**
- * 
  * Content-Type: application/x-www-form-urlencoded</BR> Content-Type:
  * multipart/form-data; boundary=----WebKitFormBoundaryKA6dsRskWA4CdJek
- *
  */
 public class HttpFrame extends Frame {
+
+    static final KMPUtil KMP_BOUNDARY = new KMPUtil("boundary=");
 
     private int                 connection      = HttpConnection.KEEP_ALIVE.getId();
     private int                 contentLength;
@@ -54,7 +54,11 @@ public class HttpFrame extends Frame {
 
     public String getBoundary() {
         if (isForm) {
-            return HttpCodec.parseBoundary(getRequestHeader(Content_Type.getId()));
+            String contentType = getRequestHeader(Content_Type.getId());
+            int    index       = KMP_BOUNDARY.match(contentType);
+            if (index != -1) {
+                return contentType.substring(index + 9);
+            }
         }
         return null;
     }
@@ -305,8 +309,7 @@ public class HttpFrame extends Frame {
         String Sec_WebSocket_Key_Value = getRequestHeader(Sec_WebSocket_Key);
         if (!Util.isNullOrBlank(Sec_WebSocket_Key_Value)) {
             //FIXME 258EAFA5-E914-47DA-95CA-C5AB0DC85B11 必须这个值？
-            String Sec_WebSocket_Key_Magic = Sec_WebSocket_Key_Value
-                    + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+            String Sec_WebSocket_Key_Magic = Sec_WebSocket_Key_Value + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
             byte[] key_array = Cryptos.SHA1(Sec_WebSocket_Key_Magic);
             String acceptKey = Cryptos.base64_en(key_array);
             setStatus(HttpStatus.C101);

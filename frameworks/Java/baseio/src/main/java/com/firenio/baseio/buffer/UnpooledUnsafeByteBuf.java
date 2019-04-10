@@ -30,11 +30,6 @@ final class UnpooledUnsafeByteBuf extends UnsafeByteBuf {
     }
 
     @Override
-    public boolean isPooled() {
-        return false;
-    }
-
-    @Override
     public ByteBuf duplicate() {
         if (isReleased()) {
             throw new IllegalStateException("released");
@@ -57,6 +52,11 @@ final class UnpooledUnsafeByteBuf extends UnsafeByteBuf {
         } finally {
             Unsafe.free(oldBuffer);
         }
+    }
+
+    @Override
+    public boolean isPooled() {
+        return false;
     }
 
     @Override

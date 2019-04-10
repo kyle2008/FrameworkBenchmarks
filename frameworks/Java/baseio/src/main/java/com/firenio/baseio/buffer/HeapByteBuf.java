@@ -85,12 +85,6 @@ abstract class HeapByteBuf extends ByteBuf {
     }
 
     @Override
-    public void getBytes(byte[] dst, int offset, int length) {
-        System.arraycopy(memory, pos, dst, offset, length);
-        this.pos += length;
-    }
-
-    @Override
     protected int get0(ByteBuffer dst, int len) {
         if (dst.hasArray()) {
             copy(memory, absPos(), dst.array(), dst.position(), len);
@@ -110,6 +104,12 @@ abstract class HeapByteBuf extends ByteBuf {
     @Override
     public byte getByte(int index) {
         return memory[ix(index)];
+    }
+
+    @Override
+    public void getBytes(byte[] dst, int offset, int length) {
+        System.arraycopy(memory, pos, dst, offset, length);
+        this.pos += length;
     }
 
     @Override
@@ -327,9 +327,20 @@ abstract class HeapByteBuf extends ByteBuf {
     }
 
     @Override
-    protected void putBytes0(byte[] src, int offset, int length) {
+    public void putByte(int index, byte b) {
+        memory[ix(index)] = b;
+    }
+
+    @Override
+    protected void putByte0(byte b) {
+        memory[pos++] = b;
+    }
+
+    @Override
+    protected int putBytes0(byte[] src, int offset, int length) {
         System.arraycopy(src, offset, memory, pos, length);
         this.pos += length;
+        return length;
     }
 
     @Override
@@ -354,16 +365,6 @@ abstract class HeapByteBuf extends ByteBuf {
         src.position(src.position() + len);
         skip(len);
         return len;
-    }
-
-    @Override
-    public void putByte(int index, byte b) {
-        memory[ix(index)] = b;
-    }
-
-    @Override
-    protected void putByte0(byte b) {
-        memory[pos++] = b;
     }
 
     @Override
@@ -411,67 +412,23 @@ abstract class HeapByteBuf extends ByteBuf {
     }
 
     @Override
-    public void putShort(int index, short value) {
-        ByteUtil.putShort(memory, value, ix(index));
-    }
-
-    @Override
-    protected void putShort0(short value) {
-        ByteUtil.putShort(memory, value, pos);
-        pos += 2;
-    }
-
-    @Override
-    public void putShortLE(int index, short value) {
-        ByteUtil.putShortLE(memory, value, ix(index));
-    }
-
-    @Override
-    protected void putShortLE0(short value) {
-        ByteUtil.putShortLE(memory, value, pos);
-        pos += 2;
-    }
-
-    @Override
-    public void putUnsignedInt(int index, long value) {
-        ByteUtil.putInt(memory, (int) value, ix(index));
-    }
-
-    @Override
-    protected void putUnsignedInt0(long value) {
-        ByteUtil.putInt(memory, (int) value, pos);
-        pos += 4;
-    }
-
-    @Override
-    public void putUnsignedIntLE(int index, long value) {
-        ByteUtil.putIntLE(memory, (int) value, ix(index));
-    }
-
-    @Override
-    protected void putUnsignedIntLE0(long value) {
-        ByteUtil.putIntLE(memory, (int) value, pos);
-        pos += 4;
-    }
-
-    @Override
-    public void putUnsignedShort(int index, int value) {
+    public void putShort(int index, int value) {
         ByteUtil.putShort(memory, (short) value, ix(index));
     }
 
     @Override
-    protected void putUnsignedShort0(int value) {
+    protected void putShort0(int value) {
         ByteUtil.putShort(memory, (short) value, pos);
         pos += 2;
     }
 
     @Override
-    public void putUnsignedShortLE(int index, int value) {
+    public void putShortLE(int index, int value) {
         ByteUtil.putShortLE(memory, (short) value, ix(index));
     }
 
     @Override
-    protected void putUnsignedShortLE0(int value) {
+    protected void putShortLE0(int value) {
         ByteUtil.putShortLE(memory, (short) value, pos);
         pos += 2;
     }
