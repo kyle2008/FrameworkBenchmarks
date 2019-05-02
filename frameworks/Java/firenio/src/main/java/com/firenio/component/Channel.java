@@ -559,7 +559,7 @@ public abstract class Channel implements Runnable, Closeable {
         int length = native_read();
         if (length < 1) {
             if (length == -1) {
-//                write();
+                write();
                 Util.close(this);
                 return false;
             }
